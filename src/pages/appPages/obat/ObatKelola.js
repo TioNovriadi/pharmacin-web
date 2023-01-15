@@ -32,6 +32,7 @@ const ObatKelola = ({ route, navigation }) => {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [dataObat, setDataObat] = useState(null);
+  const [dataObatView, setDataObatView] = useState(null);
   const [refresh, setRefresh] = useState(false);
   const [obatChange, setObatChange] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
@@ -64,6 +65,25 @@ const ObatKelola = ({ route, navigation }) => {
       });
   };
 
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = dataObat.filter((item) => {
+        const itemData = item.nama_obat
+          ? item.nama_obat.toUpperCase()
+          : "".toUpperCase();
+        const textData = text.toUpperCase();
+
+        return itemData.indexOf(textData) > -1;
+      });
+
+      setDataObatView(newData);
+      setSearch(text);
+    } else {
+      setDataObatView(dataObat);
+      setSearch(text);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -79,6 +99,7 @@ const ObatKelola = ({ route, navigation }) => {
         .then((json) => {
           if (json.message === "Data fetched!") {
             setDataObat(json.data);
+            setDataObatView(json.data);
           }
         })
         .catch((e) => {
@@ -163,7 +184,7 @@ const ObatKelola = ({ route, navigation }) => {
               value={search}
               placeholder="Cari..."
               placeholderTextColor="#333333"
-              onChangeText={(text) => setSearch(text)}
+              onChangeText={(text) => searchFilter(text)}
               style={{
                 fontFamily: "Poppins-Regular",
                 fontSize: 16,
@@ -302,7 +323,7 @@ const ObatKelola = ({ route, navigation }) => {
           </View>
 
           <FlatList
-            data={dataObat}
+            data={dataObatView}
             renderItem={({ item, index }) => (
               <View
                 style={{

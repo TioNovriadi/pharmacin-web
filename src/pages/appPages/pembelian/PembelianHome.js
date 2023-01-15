@@ -32,6 +32,7 @@ const PembelianHome = ({ navigation }) => {
     endDate: undefined,
   });
   const [dataPembelian, setDataPembelian] = useState(null);
+  const [dataPembelianView, setDataPembelianView] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const onDismiss = useCallback(() => {
@@ -40,11 +41,61 @@ const PembelianHome = ({ navigation }) => {
 
   const onConfirm = useCallback(
     ({ startDate, endDate }) => {
-      setShowDate(false);
-      setRange({ startDate, endDate });
+      const fetchData = async () => {
+        setIsLoading(true);
+
+        await fetch(API_ACCESS.get_all_pembelian, {
+          method: "GET",
+          mode: "cors",
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((json) => {
+            if (json.message === "Data fetched!") {
+              const newData = json.data.filter((item) => {
+                const date = new Date(item.tanggal_pembelian);
+
+                return date >= startDate && date <= endDate;
+              });
+
+              setDataPembelianView(newData);
+            }
+          })
+          .catch((e) => {
+            console.log(e);
+          })
+          .finally(() => {
+            setIsLoading(false);
+            setShowDate(false);
+            setRange({ startDate, endDate });
+          });
+      };
+
+      fetchData();
     },
-    [setShowDate, setRange]
+    [setShowDate, setRange, setDataPembelianView]
   );
+
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = dataPembelian.filter((item) => {
+        const itemData = item.nomor_invoice
+          ? item.nomor_invoice.toUpperCase()
+          : "".toUpperCase();
+        const textData = text.toUpperCase();
+
+        return itemData.indexOf(textData) > -1;
+      });
+
+      setDataPembelianView(newData);
+      setSearch(text);
+    } else {
+      setDataPembelianView(dataPembelian);
+      setSearch(text);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +112,7 @@ const PembelianHome = ({ navigation }) => {
         .then((json) => {
           if (json.message === "Data fetched!") {
             setDataPembelian(json.data);
+            setDataPembelianView(json.data);
           }
         })
         .catch((e) => {
@@ -137,8 +189,14 @@ const PembelianHome = ({ navigation }) => {
                 }}
               >
                 {range.startDate === undefined
-                  ? "YYYY-MM-DD"
-                  : range.startDate.toISOString().substring(0, 10)}
+                  ? "DD-MM-YYYY"
+                  : range.startDate
+                      .toLocaleDateString("id", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })
+                      .replace(new RegExp("/", "g"), "-")}
               </Text>
             </TouchableOpacity>
 
@@ -168,8 +226,14 @@ const PembelianHome = ({ navigation }) => {
                 }}
               >
                 {range.endDate === undefined
-                  ? "YYYY-MM-DD"
-                  : range.endDate.toISOString().substring(0, 10)}
+                  ? "DD-MM-YYYY"
+                  : range.endDate
+                      .toLocaleDateString("id", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })
+                      .replace(new RegExp("/", "g"), "-")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -211,7 +275,7 @@ const PembelianHome = ({ navigation }) => {
                 value={search}
                 placeholder="Cari..."
                 placeholderTextColor="#333333"
-                onChangeText={(text) => setSearch(text)}
+                onChangeText={(text) => searchFilter(text)}
                 style={{
                   fontFamily: "Poppins-Regular",
                   fontSize: 16,
@@ -338,7 +402,7 @@ const PembelianHome = ({ navigation }) => {
         </View>
 
         <FlatList
-          data={dataPembelian}
+          data={dataPembelianView}
           renderItem={({ item, index }) => (
             <View
               style={{
@@ -395,7 +459,13 @@ const PembelianHome = ({ navigation }) => {
                   textAlign: "center",
                 }}
               >
-                {item.tanggal_pembelian.substring(0, 10)}
+                {new Date(item.tanggal_pembelian)
+                  .toLocaleDateString("id", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  })
+                  .replace(new RegExp("/", "g"), "-")}
               </Text>
 
               <Text

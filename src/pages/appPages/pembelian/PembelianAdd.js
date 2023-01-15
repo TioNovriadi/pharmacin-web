@@ -208,7 +208,91 @@ const PembelianAdd = ({ navigation }) => {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FAFAFA" }}>
       {/* Header */}
-      <HeaderPage pageName="Pembelian" pageSubmenu="/ Pembelian Baru" />
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingLeft: 38,
+          paddingRight: 14,
+          marginTop: 33,
+        }}
+      >
+        <View>
+          <Text
+            style={{
+              fontFamily: "Poppins-Bold",
+              fontSize: 32,
+              color: "#062659",
+            }}
+          >
+            Pembelian{" "}
+            <Text
+              style={{
+                fontFamily: "Poppins-SemiBold",
+                fontSize: 16,
+                color: "#868686",
+              }}
+            >
+              / Pembelian Baru
+            </Text>
+          </Text>
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#D76363",
+              borderRadius: 10,
+              paddingHorizontal: 30,
+              paddingVertical: 9,
+              marginRight: 20,
+            }}
+            onPress={() => {
+              navigation.goBack();
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Poppins-Medium",
+                fontSize: 18,
+                color: "white",
+                includeFontPadding: false,
+              }}
+            >
+              Kembali
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#2FA33B",
+              borderRadius: 10,
+              paddingHorizontal: 30,
+              paddingVertical: 9,
+            }}
+            onPress={() => {
+              addData(userId, totalHarga, nomorInvoice, pemebelianItem);
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Poppins-Medium",
+                fontSize: 18,
+                color: "white",
+                includeFontPadding: false,
+              }}
+            >
+              Lakukan Pembayaran
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Content */}
       <View

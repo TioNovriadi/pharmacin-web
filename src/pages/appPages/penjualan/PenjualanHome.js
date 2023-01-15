@@ -9,13 +9,14 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import HeaderPage from "../../../component/HeaderPage";
 import { API_ACCESS } from "../../../utils/config/Endpoint";
 import { AuthContext } from "../../../utils/context/AuthContext";
 import { useIsFocused } from "@react-navigation/native";
 import toast from "../../../utils/helper/Toast";
 import LoadingModal from "../../../component/LoadingModal";
+import { DatePickerModal } from "react-native-paper-dates";
 
 const formatter = new Intl.NumberFormat("id-ID", {
   style: "currency",
@@ -27,17 +28,62 @@ const PenjualanHome = ({ navigation }) => {
 
   const isFocused = useIsFocused();
 
-  const [range, setRange] = useState({
-    startDate: null,
-    endDate: null,
-  });
   const [search, setSearch] = useState("");
   const [dataPenjualan, setDataPenjualan] = useState(null);
+  const [dataPenjualanView, setDataPenjualanView] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [penjualanChange, setPenjualanChange] = useState(null);
   const [isLoadingInput, setIsLoadingInput] = useState(false);
   const [refresh, setRefresh] = useState(false);
+  const [showDate, setShowDate] = useState(false);
+  const [range, setRange] = useState({
+    startDate: undefined,
+    endDate: undefined,
+  });
+
+  const onDismiss = useCallback(() => {
+    setShowDate(false);
+  }, [setShowDate]);
+
+  const onConfirm = useCallback(
+    ({ startDate, endDate }) => {
+      const fetchData = async () => {
+        setIsLoading(true);
+
+        await fetch(API_ACCESS.get_all_penjualan, {
+          method: "GET",
+          mode: "cors",
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        })
+          .then((response) => response.json())
+          .then((json) => {
+            if (json.message === "Data fetched!") {
+              const newData = json.data.filter((item) => {
+                const date = new Date(item.tanggal_transaksi);
+
+                return date >= startDate && date <= endDate;
+              });
+
+              setDataPenjualanView(newData);
+            }
+          })
+          .catch((e) => {
+            console.log(e);
+          })
+          .finally(() => {
+            setIsLoading(false);
+            setShowDate(false);
+            setRange({ startDate, endDate });
+          });
+      };
+
+      fetchData();
+    },
+    [setShowDate, setRange, setDataPenjualanView]
+  );
 
   const deletePenjualan = async (penjualanId) => {
     setIsLoadingInput(true);
@@ -65,6 +111,24 @@ const PenjualanHome = ({ navigation }) => {
       });
   };
 
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = dataPenjualan.filter((item) => {
+        const itemData = item.nama_pelanggan
+          ? item.nama_pelanggan.toUpperCase()
+          : "".toUpperCase();
+        const textData = text.toUpperCase();
+        return itemData.indexOf(textData) > -1;
+      });
+
+      setDataPenjualanView(newData);
+      setSearch(text);
+    } else {
+      setDataPenjualanView(dataPenjualan);
+      setSearch(text);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -80,6 +144,7 @@ const PenjualanHome = ({ navigation }) => {
         .then((json) => {
           if (json.message === "Data fetched!") {
             setDataPenjualan(json.data);
+            setDataPenjualanView(json.data);
           }
         })
         .catch((e) => {
@@ -148,6 +213,9 @@ const PenjualanHome = ({ navigation }) => {
                 justifyContent: "center",
                 alignItems: "center",
               }}
+              onPress={() => {
+                setShowDate(true);
+              }}
             >
               <Text
                 style={{
@@ -156,7 +224,15 @@ const PenjualanHome = ({ navigation }) => {
                   color: "#001B45",
                 }}
               >
-                {range.startDate === null ? "YYYY-MM-DD" : range.startDate}
+                {range.startDate === undefined
+                  ? "DD-MM-YYYY"
+                  : range.startDate
+                      .toLocaleDateString("id", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })
+                      .replace(new RegExp("/", "g"), "-")}
               </Text>
             </TouchableOpacity>
 
@@ -175,6 +251,9 @@ const PenjualanHome = ({ navigation }) => {
                 justifyContent: "center",
                 alignItems: "center",
               }}
+              onPress={() => {
+                setShowDate(true);
+              }}
             >
               <Text
                 style={{
@@ -183,7 +262,15 @@ const PenjualanHome = ({ navigation }) => {
                   color: "#001B45",
                 }}
               >
-                {range.endDate === null ? "YYYY-MM-DD" : range.endDate}
+                {range.endDate === undefined
+                  ? "DD-MM-YYYY"
+                  : range.endDate
+                      .toLocaleDateString("id", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })
+                      .replace(new RegExp("/", "g"), "-")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -231,12 +318,14 @@ const PenjualanHome = ({ navigation }) => {
                 value={search}
                 placeholder="Cari..."
                 placeholderTextColor="#ACACAC"
-                onChangeText={(text) => setSearch(text)}
+                onChangeText={(text) => searchFilter(text)}
                 style={{
                   fontFamily: "Poppins-Regular",
                   fontSize: 16,
                   color: "#333",
                   flex: 1,
+                  includeFontPadding: false,
+                  outline: "none",
                 }}
               />
             </View>
@@ -333,7 +422,8 @@ const PenjualanHome = ({ navigation }) => {
           </View>
 
           <FlatList
-            data={dataPenjualan}
+            data={dataPenjualanView}
+            keyExtractor={(item, index) => item.id}
             renderItem={({ item, index }) => (
               <View
                 style={{
@@ -390,7 +480,13 @@ const PenjualanHome = ({ navigation }) => {
                     textAlign: "center",
                   }}
                 >
-                  {item.tanggal_transaksi.substring(0, 10)}
+                  {new Date(item.tanggal_transaksi)
+                    .toLocaleDateString("id", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })
+                    .replace(new RegExp("/", "g"), "-")}
                 </Text>
 
                 <Text
@@ -564,6 +660,20 @@ const PenjualanHome = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      <DatePickerModal
+        visible={showDate}
+        locale="id"
+        label="Pilih tanggal"
+        mode="range"
+        onDismiss={onDismiss}
+        onConfirm={onConfirm}
+        validRange={{
+          endDate: new Date(),
+        }}
+        startDate={range.startDate}
+        endDate={range.endDate}
+      />
 
       <LoadingModal visible={isLoadingInput} />
     </ScrollView>

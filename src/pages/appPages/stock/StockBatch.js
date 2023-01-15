@@ -236,7 +236,13 @@ const StockBatch = ({ navigation, route }) => {
                     textAlign: "center",
                   }}
                 >
-                  {item.kadaluarsa}
+                  {new Date(item.kadaluarsa)
+                    .toLocaleDateString("id", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })
+                    .replace(new RegExp("/", "g"), "-")}
                 </Text>
 
                 <Text

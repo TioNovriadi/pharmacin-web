@@ -25,6 +25,7 @@ const ObatHome = ({ navigation }) => {
   const [isLoadingInput, setIsLoadingInput] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [dataKategori, setDataKategori] = useState(null);
+  const [dataKategoriView, setDataKategoriView] = useState(null);
   const [refresh, setRefresh] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [kategoriChange, setKategoriChange] = useState(null);
@@ -124,6 +125,25 @@ const ObatHome = ({ navigation }) => {
       });
   };
 
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = dataKategori.filter((item) => {
+        const itemData = item.nama_kategori
+          ? item.nama_kategori.toUpperCase()
+          : "".toUpperCase();
+        const textData = text.toUpperCase();
+
+        return itemData.indexOf(textData) > -1;
+      });
+
+      setDataKategoriView(newData);
+      setSearch(text);
+    } else {
+      setDataKategoriView(dataKategori);
+      setSearch(text);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -139,6 +159,7 @@ const ObatHome = ({ navigation }) => {
         .then((json) => {
           if (json.message === "Data fetched!") {
             setDataKategori(json.data);
+            setDataKategoriView(json.data);
           }
         })
         .catch((e) => {
@@ -221,7 +242,7 @@ const ObatHome = ({ navigation }) => {
               value={search}
               placeholder="Cari..."
               placeholderTextColor="#333333"
-              onChangeText={(text) => setSearch(text)}
+              onChangeText={(text) => searchFilter(text)}
               style={{
                 fontFamily: "Poppins-Regular",
                 fontSize: 16,
@@ -306,7 +327,7 @@ const ObatHome = ({ navigation }) => {
           </View>
 
           <FlatList
-            data={dataKategori}
+            data={dataKategoriView}
             renderItem={({ item, index }) => (
               <TouchableOpacity
                 style={{

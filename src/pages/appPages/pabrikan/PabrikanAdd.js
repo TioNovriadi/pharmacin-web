@@ -31,6 +31,7 @@ const PabrikanAdd = ({ navigation, route }) => {
         namaPabrik: namaPabrik,
         emailPabrik: emailPabrik,
         noTelpPabrik: noTelpPabrik,
+        userId: userId,
       }),
     })
       .then((response) => response.json())

@@ -26,6 +26,7 @@ const PabrikanHome = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingPress, setIsLoadingPress] = useState(false);
   const [data, setData] = useState(null);
+  const [dataView, setDataView] = useState(null);
   const [refresh, setRefresh] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [pabrikChange, setPabrikChange] = useState(null);
@@ -56,6 +57,25 @@ const PabrikanHome = ({ navigation }) => {
       });
   };
 
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = data.filter((item) => {
+        const itemData = item.nama_pabrik
+          ? item.nama_pabrik.toUpperCase()
+          : "".toUpperCase();
+        const textData = text.toUpperCase();
+
+        return itemData.indexOf(textData) > -1;
+      });
+
+      setDataView(newData);
+      setSearch(text);
+    } else {
+      setDataView(data);
+      setSearch(text);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -71,6 +91,7 @@ const PabrikanHome = ({ navigation }) => {
         .then((json) => {
           if (json.message === "Data fetched!") {
             setData(json.data);
+            setDataView(json.data);
           }
         })
         .catch((e) => {
@@ -154,7 +175,7 @@ const PabrikanHome = ({ navigation }) => {
               value={search}
               placeholder="Cari..."
               placeholderTextColor="#333333"
-              onChangeText={(text) => setSearch(text)}
+              onChangeText={(text) => searchFilter(text)}
               style={{
                 fontFamily: "Poppins-Regular",
                 fontSize: 16,
@@ -264,7 +285,7 @@ const PabrikanHome = ({ navigation }) => {
           </View>
 
           <FlatList
-            data={data}
+            data={dataView}
             renderItem={({ item, index }) => (
               <TouchableOpacity
                 style={{

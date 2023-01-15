@@ -27,8 +27,38 @@ const PabrikanRincian = ({ route }) => {
   const [dataKategori, setDataKategori] = useState(null);
   const [showDropdownKategori, setShowDropdownKategori] = useState(false);
   const [search, setSearch] = useState("");
-  const [kategoriFilter, setKategoriFilter] = useState(null);
+  const [kategori, setKategori] = useState(null);
   const [dataObat, setDataObat] = useState(null);
+  const [dataObatView, setDataObatView] = useState(null);
+
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = dataObat.filter((item) => {
+        const itemData = item.nama_obat
+          ? item.nama_obat.toUpperCase()
+          : "".toUpperCase();
+        const textData = text.toUpperCase();
+
+        return itemData.indexOf(textData) > -1;
+      });
+
+      setDataObatView(newData);
+      setSearch(text);
+    } else {
+      setDataObatView(dataObat);
+      setSearch(text);
+    }
+  };
+
+  const kategoriFilter = (namaKategori) => {
+    const newData = dataObat.filter((item) => {
+      return item.kategoriObat.nama_kategori === namaKategori;
+    });
+
+    setDataObatView(newData);
+    setKategori(namaKategori);
+    setShowDropdownKategori(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +75,8 @@ const PabrikanRincian = ({ route }) => {
         .then((json) => {
           if (json.message === "Data fetched!") {
             setDataKategori(json.data);
+            setDataObat(pabrikData.obats);
+            setDataObatView(pabrikData.obats);
           }
         })
         .catch((e) => {
@@ -57,32 +89,6 @@ const PabrikanRincian = ({ route }) => {
 
     fetchData();
   }, []);
-
-  useEffect(() => {
-    const filterData = async () => {
-      setIsLoading(true);
-
-      if (kategoriFilter === null) {
-        setDataObat(pabrikData.obats);
-      } else {
-        const data = await pabrikData.obats.filter((tmp) => {
-          if (tmp.kategoriObat.nama_kategori === kategoriFilter) {
-            return tmp;
-          }
-        });
-
-        if (data.length > 0) {
-          setDataObat(data);
-        } else {
-          setDataObat([]);
-        }
-      }
-
-      setIsLoading(false);
-    };
-
-    filterData();
-  }, [kategoriFilter]);
 
   if (isLoading) {
     return (
@@ -197,7 +203,7 @@ const PabrikanRincian = ({ route }) => {
                   flex: 1,
                 }}
               >
-                {kategoriFilter === null ? "Jenis Obat" : kategoriFilter}
+                {kategori === null ? "Jenis Obat" : kategori}
               </Text>
 
               <Image
@@ -229,10 +235,7 @@ const PabrikanRincian = ({ route }) => {
                           index + 1 === dataKategori.length ? 0 : 2,
                         borderBottomColor: "#D9D9D9",
                       }}
-                      onPress={() => {
-                        setKategoriFilter(item.nama_kategori);
-                        setShowDropdownKategori(false);
-                      }}
+                      onPress={() => kategoriFilter(item.nama_kategori)}
                     >
                       <Text
                         style={{
@@ -288,7 +291,7 @@ const PabrikanRincian = ({ route }) => {
               value={search}
               placeholder="Cari..."
               placeholderTextColor="#333333"
-              onChangeText={(text) => setSearch(text)}
+              onChangeText={(text) => searchFilter(text)}
               style={{
                 fontFamily: "Poppins-Regular",
                 fontSize: 16,
@@ -395,7 +398,7 @@ const PabrikanRincian = ({ route }) => {
           </View>
 
           <FlatList
-            data={dataObat}
+            data={dataObatView}
             renderItem={({ item, index }) => (
               <View
                 style={{

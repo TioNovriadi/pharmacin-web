@@ -24,6 +24,26 @@ const StockHome = ({ navigation }) => {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [dataObat, setDataObat] = useState(null);
+  const [dataObatView, setDataObatView] = useState(null);
+
+  const searchFilter = (text) => {
+    if (text) {
+      const newData = dataObat.filter((item) => {
+        const itemData = item.nama_obat
+          ? item.nama_obat.toUpperCase()
+          : "".toUpperCase();
+        const textData = text.toUpperCase();
+
+        return itemData.indexOf(textData) > -1;
+      });
+
+      setDataObatView(newData);
+      setSearch(text);
+    } else {
+      setDataObatView(dataObat);
+      setSearch(text);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +60,7 @@ const StockHome = ({ navigation }) => {
         .then((json) => {
           if (json.message === "Data fetched!") {
             setDataObat(json.data);
+            setDataObatView(json.data);
           }
         })
         .catch((e) => {
@@ -108,7 +129,7 @@ const StockHome = ({ navigation }) => {
               value={search}
               placeholder="Cari..."
               placeholderTextColor="#ACACAC"
-              onChangeText={(text) => setSearch(text)}
+              onChangeText={(text) => searchFilter(text)}
               style={{
                 fontFamily: "Poppins-Regular",
                 fontSize: 16,
@@ -223,7 +244,7 @@ const StockHome = ({ navigation }) => {
 
           {/* Table */}
           <FlatList
-            data={dataObat}
+            data={dataObatView}
             renderItem={({ item, index }) => (
               <TouchableOpacity
                 style={{
