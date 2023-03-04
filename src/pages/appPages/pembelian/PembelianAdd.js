@@ -684,15 +684,90 @@ const PembelianAdd = ({ navigation }) => {
                       </TouchableOpacity>
 
                       {item.showItemModal ? (
-                        <View
+                        <ScrollView
                           style={{
                             width: 394,
                             height: 200,
+                            maxHeight: 500,
                             backgroundColor: "#F4F4F4",
                             borderRadius: 10,
                           }}
                         >
-                          <FlatList
+                          {pabrik.obats.map((item, index) => (
+                            <TouchableOpacity
+                              style={{
+                                alignItems: "center",
+                                paddingVertical: 10,
+                                borderBottomWidth:
+                                  index + 1 === pabrik.obats.length ? 0 : 2,
+                                borderBottomColor: "#D9D9D9",
+                              }}
+                              onPress={async () => {
+                                let itemAnswer = pemebelianItem;
+
+                                let kode = 0;
+
+                                if (dataPembelian.length > 0) {
+                                  for (
+                                    let i = 0;
+                                    i < dataPembelian.length;
+                                    i++
+                                  ) {
+                                    for (
+                                      let j = 0;
+                                      j < dataPembelian[i].batches.length;
+                                      j++
+                                    ) {
+                                      if (
+                                        dataPembelian[i].batches[j].obat_id ===
+                                        item.id
+                                      ) {
+                                        kode = kode + 1;
+                                      }
+                                    }
+
+                                    kode = kode + 1;
+                                  }
+                                } else {
+                                  kode = kode + 1;
+                                }
+
+                                const first = "" + kode;
+                                const pad = "0000";
+                                const final =
+                                  pad.substring(0, pad.length - first.length) +
+                                  first;
+
+                                Object.assign(itemAnswer[itemIndex], {
+                                  showItemModal: false,
+                                  item: item,
+                                  kodeBatch:
+                                    item.nama_obat.toUpperCase() + final,
+                                  kadaluarsa: new Date()
+                                    .toISOString()
+                                    .substring(0, 10),
+                                  quantity: 0,
+                                  hargaBeli: item.harga_beli,
+                                  hargaTotal: 0,
+                                });
+
+                                setPemebelianItem(itemAnswer);
+                                setItemIndex(null);
+                                setRefresh(!refresh);
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  fontFamily: "Poppins-Regular",
+                                  fontSize: 16,
+                                  color: "#333",
+                                }}
+                              >
+                                {item.nama_obat}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                          {/* <FlatList
                             data={pabrik.obats}
                             renderItem={({ item, index }) => {
                               return (
@@ -772,8 +847,8 @@ const PembelianAdd = ({ navigation }) => {
                                 </TouchableOpacity>
                               );
                             }}
-                          />
-                        </View>
+                          /> */}
+                        </ScrollView>
                       ) : null}
                     </View>
 
